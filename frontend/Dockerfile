@@ -1,0 +1,16 @@
+FROM node:22-alpine AS build
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:stable-alpine
+
+ENV BACKEND_UPSTREAM=backend:8000
+
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 3000
